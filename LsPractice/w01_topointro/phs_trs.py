@@ -105,7 +105,7 @@ Guess: A Hamiltonian with TRS has Kramers degenercy, each En is doublly
        level crossing won't change the systems topology
 '''
 
-np.random.seed(102)   # make the random numbers predictable, i.e the same random
+np.random.seed(68)   # make the random numbers predictable, i.e the same random
                     # number sequence of each specific seed
 
 # Now start with a PHS Hamiltonian
@@ -115,26 +115,75 @@ H1 = make_random_phs_ham(8)
 H0 = make_H_skrew(H0)
 H1 = make_H_skrew(H1)
 
-pfaffian = find_pfaffian(alphas, H0, H1)
-print(pfaffian.shape)
-
-# Energy spectrum with the change of α
+# Energy spectrum and Pfaffian as a function of α
 spectrum = find_spectrum(alphas, H0, H1)
+pfaffian = find_pfaffian(alphas, H0, H1)
 
 fig1 = plt.figure()
-ax1 = fig1.add_subplot(211)
-plt.title('Energy spectrum as a function of α')
+ax1 = fig1.add_subplot(221)
+plt.title('PHS')
 ax1.plot(alphas, spectrum[:,0:len(spectrum[0])], color = 'black')
-plt.ylim(ymin = -1.5, ymax = 1.5)
+plt.ylim(ymin = -3, ymax = 3)
 plt.xlim(xmin = 0, xmax = 1)
 plt.xlabel('α')
 plt.ylabel('Energy')
 
-ax2 = fig1.add_subplot(212)
+ax2 = fig1.add_subplot(223)
+plt.title('PHS')
 ax2.plot(alphas, pfaffian, color = 'black')
 plt.ylim(ymin = -1.5, ymax = 1.5)
 plt.xlim(xmin = 0, xmax = 1)
 plt.xlabel('α')
 plt.ylabel('Pfaffin')
 
+
+''' Now create Hamiltonains with both PHS and TRS
+    PHS: H = - σx @ H* @ σx
+    TRS: H = σy @ H* @ σy
+    PHS  + TRS = - σx @ σy @ H @ σy @ σx
+'''
+'''This doesn't work because the Hamiltonian generated are bot BdF form
+def make_random_phs_trs_ham(N):
+        if N % 2:
+            raise ValueError('Matrix dimension should be a multiple of 2')
+        sy = np.kron(np.array([[0, -1j], [1j, 0]]), np.eye(N // 2))
+        sx = np.kron(np.array([[0, 1], [1, 0]]), np.eye(N // 2))
+        h = randn(N, N) + 1j * randn(N, N)
+        h += h.T.conj()    # define a random Hamiltonian
+        Th = - sx @ sy @ h @ sy @ sx
+        return (h + Th) / 4
+        '''
+
+np.random.seed(68)
+H2 = make_random_symplectic_ham(6)
+H3 = make_random_symplectic_ham(6)
+
+H2 = (H2 - H2.conj())/2
+H3 = (H3 - H3.conj())/2
+
+# Energy spectrum and Pfaffian as a function of α
+spectrum1 = find_spectrum(alphas, H2, H3)
+pfaffian1 = find_pfaffian(alphas, H2, H3)
+
+ax3 = fig1.add_subplot(222)
+plt.title('PHS+TRS')
+ax3.plot(alphas, spectrum1[:,0:len(spectrum1[0])], color = 'black')
+plt.ylim(ymin = -3, ymax = 3)
+plt.xlim(xmin = 0, xmax = 1)
+plt.xlabel('α')
+plt.ylabel('Energy')
+
+ax4 = fig1.add_subplot(224)
+plt.title('PHS+TRS')
+ax4.plot(alphas, pfaffian1, color = 'black')
+plt.ylim(ymin = -1.5, ymax = 1.5)
+plt.xlim(xmin = 0, xmax = 1)
+plt.xlabel('α')
+plt.ylabel('Pfaffin')
+
 plt.show()
+
+
+'''Question remains
+   1. why n=10
+'''
