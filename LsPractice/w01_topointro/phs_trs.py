@@ -185,5 +185,7 @@ plt.show()
 
 
 '''Question remains
-   1. why n=10
+   1. Why N = 2*(2n+1) has a flat band in the middle ? (doubly degenerate)
+   2. For N = 4n, is it possible to have a gap close and reopen ?
+      Or the Hamiltian remains trivial ?
 '''
