@@ -1,59 +1,31 @@
+#-----Test the function of the codes-------------------------------------------
+import sys
+sys.path.append('./code')  #import modules in folder : code
+import pfaffian as pf
+import functions as fun
+
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from types import SimpleNamespace
 
-randn = np.random.randn
-def make_random_phs_ham(N):
-    if N % 2:
-        raise ValueError('Matrix dimension should be a multiple of 2')
-    # sy equals the direct production of a identity matrix(dim N//2) and the
-    # Pauli matrix \sigma_y
-    ##sx = np.kron(np.eye(N // 2), np.array([[0, 1], [1, 0]]))
-    sx = np.kron(np.array([[0, 1], [1, 0]]), np.eye(N // 2))
-    h = randn(N, N) + 1j * randn(N, N)
-    h += h.T.conj()    # define a random Hamiltonian
-    Th = - sx @ h.conj() @ sx    # @ is inner product, * is the product of
-                               # corresponding elements. A(11)*B(11)
-    return (h + Th) / 4
+import kwant
 
-def make_random_symplectic_ham(N):
-    if N % 2:
-        raise ValueError('Matrix dimension should be a multiple of 2')
-    # sy equals the direct production of a identity matrix(dim N//2) and the
-    # Pauli matrix \sigma_y
-    sy = np.kron(np.eye(N // 2), np.array([[0, -1j], [1j, 0]]))
-    h = randn(N, N) + 1j * randn(N, N)
-    h += h.T.conj()    # define a random Hamiltonian
-    Th = sy @ h.conj() @ sy    # @ is inner product, * is the product of
-                               # corresponding elements. A(11)*B(11)
-    return (h + Th) / 4
+def ssh_chain(L=None, periodic=False):
+    lat = kwant.lattice.chain()
 
-def make_random_phs_trs_ham(N):
-        if N % 2:
-            raise ValueError('Matrix dimension should be a multiple of 2')
-        sy = np.kron(np.array([[0, -1j], [1j, 0]]), np.eye(N // 2))
-        sx = np.kron(np.array([[0, 1], [1, 0]]), np.eye(N // 2))
-        h = randn(N, N) + 1j * randn(N, N)
-        h += h.T.conj()    # define a random Hamiltonian
-        Th = - sy @ sx @ h @ sx @ sy
-        return (h + Th) / 4
+    if L is None:
+        syst = kwant.Builder(kwant.TranslationalSymmetry((-1,)))
+        L = 1
+    else:
+        syst = kwant.Builder()
 
-def make_H_skrew(h):
-    N = h.shape[0]
-    if N % 2:
-        raise ValueError('Matrix dimension should be a multiple of 2')
-    p = np.kron(np.array([[1, 1], [1j, -1j]]), np.eye(N // 2))
-    h = p @ h @ p.T.conj()
-    return h/2
+    for x in range(1, L//2):
+        syst[lat(2 * x - 1),lat(2 * x)] = t1
+        syst[lat(2 * x),lat(2 * x + 1)] = t2
+    # Builder ensures hermiticity
+    return syst
 
-def make_BdG_ham(N):
-    # This is antisymmetric basis
-    H = 1j * randn(2*N, 2*N)
-    H += H.T.conj()
-    return H / 2
-
-H1 = make_random_symplectic_ham(4)
-H2 = (H1 - H1.conj())/2
-
-H2 += H2.T
-print(H2)
+    sys = ssh_chain(L=25)
+    p = SimpleNamespace(t1=1, t2=1)
+    fun.spectrum(sys,p)
