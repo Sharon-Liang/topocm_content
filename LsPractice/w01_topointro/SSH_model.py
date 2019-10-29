@@ -26,7 +26,10 @@ def ssh_chain(L=None, periodic=False):
 
     # Define onsite energy
     for x in range(L):
-        sys[lat(x)] = 0
+        if x%2 == 0:
+            sys[lat(x)] = ua
+        else:
+            sys[lat(x)] = ub
 
     # Define hooping terms
     if L%2 == 0:
@@ -49,8 +52,7 @@ def ssh_chain(L=None, periodic=False):
     return sys
 
 
-
-'''First calculate the energy spectrum change with respect to if t2/t1.'''
+'''First calculate the energy spectrum in k-space.'''
 '''[t1=0,t2=1] and [t1=1,t2 = 0] should be degenerate, since they are simply
    several pairs of dimmers'''
 # Now define a infinite SSH chain, and check it's spectrum
@@ -60,7 +62,7 @@ def SSH_inf_chain(L):
     sys= kwant.Builder(kwant.TranslationalSymmetry((2,)))
     # Define onsite energy
     for x in range(L):
-        sys[lat(x)] = 0
+        sys[lat(x)] = 1
 
     # Define hooping terms
     if L%2 == 0:
@@ -74,10 +76,56 @@ def SSH_inf_chain(L):
             sys[lat(2*x + 1),lat(2*x +2)] = -t2
     return sys
 
-t1 = 1
-t2 = 0.5
-sys_inf = SSH_inf_chain(L=10).finalized()
-kwant.plotter.bands(sys_inf)
+'''Now calculte the energy spectrum as a function of t2/t1 '''
+t1 = 1 # Set as default
+ua = ub = 0
+N = 30 # Number of sites
+       # If N=odd, there always be a zero mode
+ts = np.linspace(0,2.5,1000)
+energies = np.zeros((1000,N))
+
+i=0
+for t2 in ts:
+    sys = ssh_chain(L=N).finalized()
+    ham = sys.hamiltonian_submatrix()
+    energies[i,:] = np.linalg.eigvalsh(ham)
+    i = i + 1
+
+fig1 = plt.figure()
+ax1 = fig1.add_subplot(121)
+plt.title('ua = ub =0')
+ax1.plot(ts, energies[:,0:N-1], color = 'black')
+#plt.ylim(ymin = -10, ymax = 10)
+plt.xlim(xmin = 0, xmax = 2.5)
+plt.xlabel('t2 / t1')
+plt.ylabel('Energy')
+
+
+'''Now add a sublattice potential '''
+t1 = 1 # Set as default
+ua = 0.2
+ub = -0.2
+N = 30 # Number of sites
+       # If N=odd, there always be a zero mode
+ts = np.linspace(0,2.5,1000)
+energies = np.zeros((1000,N))
+
+i=0
+for t2 in ts:
+    sys = ssh_chain(L=N).finalized()
+    ham = sys.hamiltonian_submatrix()
+    energies[i,:] = np.linalg.eigvalsh(ham)
+    i = i + 1
+
+ax2 = fig1.add_subplot(122)
+plt.title('ua=0.2, ub=-0.2')
+ax2.plot(ts, energies[:,0:N-1], color = 'black')
+#plt.ylim(ymin = -10, ymax = 10)
+plt.xlim(xmin = 0, xmax = 2.5)
+plt.xlabel('t2 / t1')
+#plt.ylabel('Energy')
+plt.show()
+
 
 
 
@@ -88,3 +136,10 @@ kwant.plotter.bands(sys_inf)
 
 
 '''Connect two chains with t1>>t2 and t2>>t1 respectively'''
+
+
+'''Observations:
+   1. t2/t1 ~ 1.5, the zero mode emerges
+   2. add sublattice chemical potential can destory the
+      topological non-trivial phase.
+   '''
