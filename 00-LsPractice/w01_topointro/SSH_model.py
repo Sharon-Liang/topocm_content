@@ -127,13 +127,20 @@ plt.xlabel('t2 / t1')
 plt.show()
 
 
-
-
-
-
-
-
-
+'''Calculate the wave function of the zero modes'''
+# zero modes: the L/2-1 and L/2 column of the eigen vectors
+# 1st excited state: L/2 + 1 column of the eigen vectors
+t1 = 1
+t2 = 2
+ua = ub = 0
+N = 30
+sys = ssh_chain(L=N).finalized()
+ham = sys.hamiltonian_submatrix()
+ev, evec = np.linalg.eigh(ham)
+zero1 = evec[:,N//2].copy()
+zero1 = pow(abs(zero1),2)
+plt.bar(x=np.arange(1,31),height = zero1[:])
+plt.show()
 
 
 '''Connect two chains with t1>>t2 and t2>>t1 respectively'''
